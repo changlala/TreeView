@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.chang.treeview.view.TreeViewWrapper
+        android:clipChildren="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <com.chang.treeview.view.CanvasLayout
+            android:id="@+id/canvasLayout"
+            android:background="@color/black"
+            android:layout_width="1500dp"
+            android:layout_height="1500dp">
+            <com.chang.treeview.view.TreeView
+                android:clipChildren="false"
+                android:id="@+id/treeview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </com.chang.treeview.view.CanvasLayout>
+    </com.chang.treeview.view.TreeViewWrapper>
+
+    <LinearLayout
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:text="addSub"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/addSubNode"/>
+
+        <Button
+            android:text="delet"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/deleteNode"/>
+        <Button
+            android:text="save"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/saveNode"/>
+    </LinearLayout>
+
+</RelativeLayout>
