@@ -12,6 +12,7 @@ import com.chang.treeview.view.CanvasLayout;
 import com.chang.treeview.view.RightTreeLayoutManager;
 import com.chang.treeview.view.TreeView;
 
+import java.io.File;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,15 +31,18 @@ public class MainActivity extends AppCompatActivity {
 
 //        savedInstanceState.get
 
-//        generateTree();
-        mTreeView = findViewById(R.id.treeview);
-//        File df = new File(getFilesDir()+"/"+"temp1.ch");
-//        if(df.exists())
-//            df.delete();
-//        mTreeView.setTree(mTree);
 
-        //读取保存的树文件
-        mTreeView.setConfigFile("temp1.ch");
+        mTreeView = findViewById(R.id.treeview);
+        //初始化TreeView
+        generateTree();
+        File df = new File(getFilesDir()+"/"+"temp1.ch");
+        if(df.exists())
+            //读取保存的树文件
+            mTreeView.setConfigFile("temp1.ch");
+        else
+            mTreeView.setTree(mTree);
+
+
         //设置layout方式
         RightTreeLayoutManager treeLayoutManager = new RightTreeLayoutManager(mTreeView);
         mTreeView.setmLayoutManager(treeLayoutManager);
