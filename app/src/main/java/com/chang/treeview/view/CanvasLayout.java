@@ -27,7 +27,8 @@ public class CanvasLayout extends FrameLayout{
 
     /**
      *
-     * 判断
+     * 判断wrapperlayout坐标系下的x，y是否存在Node
+     *
      * @param x parent(treewrapper)坐标系下
      * @param y
      * @return
