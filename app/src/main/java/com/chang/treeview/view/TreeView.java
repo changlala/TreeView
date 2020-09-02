@@ -273,7 +273,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
                 //NodeVIew没有发生变化，所以不进行invalidate
 //                invalidate();
 
-                return true;
+                return false;
             }
         }
 

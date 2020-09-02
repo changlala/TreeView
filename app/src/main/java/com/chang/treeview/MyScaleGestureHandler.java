@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.ScaleGestureDetector;
 
 import com.chang.treeview.view.CanvasLayout;
+import com.chang.treeview.view.TreeViewWrapper;
 
 public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestureListener {
     private static final String TAG = "MyScaleGestureHandler";
@@ -12,20 +13,16 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
     private float scale = 1f;
     private boolean firstTime = true;
 
+    private TreeViewWrapper mTreeViewWapper;
     private CanvasLayout mCanvasLayout;
-
-    public CanvasLayout getmCanvasLayout() {
-        return mCanvasLayout;
-    }
-
-    public void setmCanvasLayout(CanvasLayout mCanvasLayout) {
-        this.mCanvasLayout = mCanvasLayout;
-    }
-
     public float getScale() {
         return scale;
     }
 
+
+    public MyScaleGestureHandler(TreeViewWrapper mTreeViewWapper) {
+        this.mTreeViewWapper = mTreeViewWapper;
+    }
 
     /**
      *
@@ -76,6 +73,8 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
 
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
+        mCanvasLayout = mTreeViewWapper.getCanvasLayout();
+
         Log.d(TAG, "onScaleBegin: ");
         return mCanvasLayout != null;
     }
