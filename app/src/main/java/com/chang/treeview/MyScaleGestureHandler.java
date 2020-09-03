@@ -32,8 +32,10 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
 
-        float previousSpan = detector.getPreviousSpan();//scaleEnd()调用后更新
+        float previousSpan = detector.getPreviousSpan();
         float currentSpan = detector.getCurrentSpan();
+
+        float tempScale;
         if (currentSpan < previousSpan) {
             // 缩小
             scale = preScale - (previousSpan - currentSpan) / 500;
@@ -45,20 +47,28 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
         //限制缩放倍数
         if (scale > 3 || scale < 0.5) {
 
-            if (firstTime)
-                preScale = scale;
-            Log.d(TAG, "onScale: return true scale" + " " + scale);
+//            if (firstTime){
+//                preScale = scale;
+            if(firstTime){
+                if(scale > 3){
+                    preScale = 3f;
+                }else if(scale <0.5){
+                    preScale = 0.5f;
+                }
+            }
+            Log.d(TAG, "onScale: return true prescale scale "+preScale + " " + scale);
             Log.d(TAG, "onScale: prevSpan curSpan " + previousSpan + " " + currentSpan);
             firstTime = false;
             return true;
         }
 
+//        scale = tempScale;
         firstTime = true;
 
         Log.d(TAG, "onScale: scale" + scale);
         Log.d(TAG, "onScale: prevSpan curSpan " + previousSpan + " " + currentSpan);
         // 左上角不动
-        mCanvasLayout.setPivotX(0);
+        mCanvasLayout.setPivotX(0  );
         mCanvasLayout.setPivotY(0);
         mCanvasLayout.setScaleX(scale);
         mCanvasLayout.setScaleY(scale);

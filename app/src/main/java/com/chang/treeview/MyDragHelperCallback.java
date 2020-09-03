@@ -47,8 +47,9 @@ public class MyDragHelperCallback extends ViewDragHelper.Callback {
 
         mCanvasLayout = mTreeViewWrapper.getCanvasLayout();
         //获取当前缩放倍数
-        float curScale =  mTreeViewWrapper.getOnScaleGestureHandler().getScale();
-
+//        float curScale =  mTreeViewWrapper.getOnScaleGestureHandler().getScale();
+        float curScale =  mCanvasLayout.getScaleX();
+        Log.d(TAG, "clampViewPositionHorizontal: 缩放倍数 left dx "+curScale+" "+left+" "+dx);
 
         if (dx < 0) {
             //手指左划
@@ -60,14 +61,20 @@ public class MyDragHelperCallback extends ViewDragHelper.Callback {
                 //缩放后的画布宽度
                 int afterScaleWidth = (int)(mCanvasLayout.getMeasuredWidth() * curScale);
                 Log.d(TAG, "clampViewPositionHorizontal: clampRight afterScaleWidth "+clampRight+" "+afterScaleWidth);
-                return (afterScaleWidth - mTreeViewWrapper.getScreenWidth()) * -1;
+
+                int res = (afterScaleWidth - mTreeViewWrapper.getScreenWidth()) * -1;
+                Log.d(TAG, "clampViewPositionHorizontal: dx小于零 return res "+res);
+                return res;
             } else {
+                Log.d(TAG, "clampViewPositionHorizontal: dx小于零 return left "+left);
                 return left;
             }
         } else {
             if (mCanvasLayout.getLeft() + dx >= 0) {
+                Log.d(TAG, "clampViewPositionHorizontal: dx大于零 return 0");
                 return 0;
             } else {
+                Log.d(TAG, "clampViewPositionHorizontal: dx大于零 return left "+left);
                 return left;
             }
         }
@@ -77,26 +84,33 @@ public class MyDragHelperCallback extends ViewDragHelper.Callback {
     @Override
     public int clampViewPositionVertical(@NonNull View child, int top, int dy) {
         mCanvasLayout = mTreeViewWrapper.getCanvasLayout();
+//        float curScale =  mTreeViewWrapper.getOnScaleGestureHandler().getScale();
+        float curScale =  mCanvasLayout.getScaleX();
 
-        Log.d(TAG, "clampViewPositionVertical: top dy " + top + " " + dy +
+        Log.d(TAG, "clampViewPositionVertical: 缩放倍数 top dy "+curScale+" "+ top + " " + dy +
                 "mCanvasLayout.getTop() " + mCanvasLayout.getTop());
-        float curScale =  mTreeViewWrapper.getOnScaleGestureHandler().getScale();
         if (dy < 0) {
             //手指上划
-
             //计算考虑缩放后的下边界
             int clampBottom = (int)(mCanvasLayout.getMeasuredHeight() * curScale) + mCanvasLayout.getTop();
+//            int clampBottom = (int)((mCanvasLayout.getMeasuredHeight() + mCanvasLayout.getTop() )* curScale);
+            Log.d(TAG, "clampViewPositionVertical: clampBottom "+clampBottom);
             if (clampBottom + dy <= mTreeViewWrapper.getScreenHeight()) {
                 //scale后的画布高度
                 int afterScaleHeight = (int)(mCanvasLayout.getMeasuredHeight() * curScale);
-                return (afterScaleHeight - mTreeViewWrapper.getScreenHeight()) * -1;
+                int res = (afterScaleHeight - mTreeViewWrapper.getScreenHeight()) * -1;
+                Log.d(TAG, "clampViewPositionVertical: dy小于零 return res "+res);
+                return res;
             } else {
+                Log.d(TAG, "clampViewPositionVertical: dy大于零 return top "+top);
                 return top;
             }
         } else {
             if (mCanvasLayout.getTop() + dy >= 0) {
+                Log.d(TAG, "clampViewPositionVertical: dy大于零 return 0");
                 return 0;
             } else {
+                Log.d(TAG, "clampViewPositionVertical: dy大于零 return top "+top);
                 return top;
             }
         }
