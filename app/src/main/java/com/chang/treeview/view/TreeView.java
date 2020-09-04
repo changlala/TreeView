@@ -23,6 +23,9 @@ import com.chang.treeview.presenter.TreeViewPresenter;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.customview.widget.ViewDragHelper;
+
 import static com.chang.treeview.DensityUtils.dp2px;
 
 public class TreeView extends ViewGroup implements TreeViewContract.View {
@@ -46,9 +49,26 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
     private ChildViewCustomer mChildViewCustomer;
 
     private Context mContext;
+    private ViewDragHelper mDragHelper;
 
     private int curTop = 0;
     private int curleft = 0;
+
+    private boolean inAutoLayoutMode = true;
+
+    public boolean isInAutoLayoutMode() {
+        return inAutoLayoutMode;
+    }
+
+    public void setInAutoLayoutMode(boolean inAutoLayoutMode) {
+        this.inAutoLayoutMode = inAutoLayoutMode;
+        if(inAutoLayoutMode)
+            requestLayout();
+    }
+
+    public ViewDragHelper getDragHelper() {
+        return mDragHelper;
+    }
 
     public TreeView(Context context) {
         super(context);
@@ -64,6 +84,72 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         //给文件保存路径赋值
         String filePath = context.getFilesDir().getPath();
         ConfigFile.setFilePath(filePath);
+
+        //draghelper
+        mDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
+            @Override
+            public boolean tryCaptureView(@NonNull View child, int pointerId) {
+                NodeView nv = (NodeView)child;
+
+                //头节点不可移动
+                if(nv.getNodeValue().equals(mTree.getHead())){
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            public int getViewHorizontalDragRange(@NonNull View child) {
+                return 1;
+            }
+
+            @Override
+            public int getViewVerticalDragRange(@NonNull View child) {
+                return 1;
+            }
+
+            @Override
+            public int clampViewPositionHorizontal(@NonNull View child, int left, int dx) {
+                // TODO: 2020/9/4 需要限制拖拽范围
+                Log.d(TAG, "clampViewPositionHorizontal: left "+left);
+                return left;
+            }
+
+            @Override
+            public int clampViewPositionVertical(@NonNull View child, int top, int dy) {
+                Log.d(TAG, "clampViewPositionVertical: top "+top);
+                return top;
+            }
+
+            @Override
+            public void onViewDragStateChanged(int state) {
+                Log.d(TAG, "onViewDragStateChanged: state "+state);
+                super.onViewDragStateChanged(state);
+            }
+
+            @Override
+            public void onViewReleased(@NonNull View releasedChild, float xvel, float yvel) {
+                super.onViewReleased(releasedChild, xvel, yvel);
+                Log.d(TAG, "onViewReleased: child t l r b"
+                        +((NodeView)releasedChild).getNodeValue().getName()
+                        +" "+releasedChild.getTop()+
+                        " "+ releasedChild.getLeft()+" "+
+                        releasedChild.getRight()+" "+
+                        releasedChild.getBottom());
+            }
+
+            @Override
+            public void onViewCaptured(@NonNull View capturedChild, int activePointerId) {
+                super.onViewCaptured(capturedChild, activePointerId);
+                Log.d(TAG, "onViewCaptured: "+ ((NodeView)capturedChild).getNodeValue().getName());
+            }
+
+            @Override
+            public void onViewPositionChanged(@NonNull View changedView, int left, int top, int dx, int dy) {
+                //dragTo()调用只重绘拖动的子view，现在重绘整个TreeView
+                refreshView();
+            }
+        });
     }
 
 
@@ -223,21 +309,54 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int size = getChildCount();
+
+        Log.d(TAG, "onMeasure: ");
+        //通知每个child进行一次measure
         for (int i = 0; i < size; i++) {
             measureChild(getChildAt(i), widthMeasureSpec, heightMeasureSpec);
         }
 
-        if(mLayoutManager!= null && mTree != null){
+        if (inAutoLayoutMode) {
+            //按照layoutManager自动布局
+            if(mLayoutManager!= null && mTree != null){
 
-            Rect treeRect = null;
-            //默认布局到画布左上角
-            treeRect = mLayoutManager.onLayout(mTree,0,0);
+                Rect treeRect = null;
+                //默认布局到画布左上角
+                treeRect = mLayoutManager.onLayout(mTree,0,0);
 
-            setMeasuredDimension(treeRect.width(),treeRect.height());
+                setMeasuredDimension(treeRect.width(),treeRect.height());
 
-            mWidth = treeRect.width();
-            mHeight = treeRect.height();
+                mWidth = treeRect.width();
+                mHeight = treeRect.height();
+            }
+
+        }else{
+            //可拖拽模式
+
+            int t = Integer.MAX_VALUE,l = Integer.MAX_VALUE,r = Integer.MIN_VALUE,b = Integer.MIN_VALUE;
+            //遍历所有子view，获得所有子view中l，t的最小值，r、b的最大值
+            for (int i = 0; i < size; i++) {
+                View child = getChildAt(i);
+
+                //scale改变前后 child的tlrb值是不会变的，那该怎么办呢？
+                if(child.getTop() < t)
+                    t = child.getTop();
+                if(child.getLeft() < l)
+                    l = child.getLeft();
+                if(child.getRight() > r)
+                    r = child.getRight();
+                if(child.getBottom() > b)
+                    b = child.getBottom();
+            }
+
+            Rect treeR = new Rect(l,t,r,b);
+
+            setMeasuredDimension(treeR.width(),treeR.height());
+            mWidth = treeR.width();
+            mHeight = treeR.height();
+
         }
+
 
     }
 
@@ -246,7 +365,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
 
         Log.d(TAG, "onLayout: changed,left,top,right,bottom"+l+t+r+b);
         Log.d(TAG, "onLayout: l t"+l+" "+t);
-        if(mLayoutManager!= null && mTree != null){
+        if(mLayoutManager!= null && mTree != null && inAutoLayoutMode){
             //默认布局到画布左上角
             mLayoutManager.onLayout(mTree,0,0);
         }
@@ -262,6 +381,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int)event.getX();
         int y = (int)event.getY();
+        Log.d(TAG, "onTouchEvent: "+event);
 
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             //触摸到NodeView，设置点击状态
@@ -273,11 +393,15 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
                 //NodeVIew没有发生变化，所以不进行invalidate
 //                invalidate();
 
-                return false;
+//                return false;
             }
         }
 
-        return false;
+        if(!inAutoLayoutMode)
+            mDragHelper.processTouchEvent(event);
+
+
+        return true;
     }
 
     /**

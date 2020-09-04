@@ -40,6 +40,8 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
         /**
          * preScale在一个事件流结束时得到赋值，事件流进行中不会修改。
          * 除非缩放倍数超出或小于阈值
+         *
+         *
          */
         if (currentSpan < previousSpan) {
             // 缩小
@@ -50,6 +52,9 @@ public class MyScaleGestureHandler implements ScaleGestureDetector.OnScaleGestur
         }
 
         //限制缩放倍数
+        /**
+         * 目前横屏状态下还有些问题，缩放倍数可能还需要调整（缩到最小时保证画布大于wrapper）
+         */
         if (scale > 3 || scale < 0.5) {
 
             //超出或小于缩放阈值，需要保存preScale

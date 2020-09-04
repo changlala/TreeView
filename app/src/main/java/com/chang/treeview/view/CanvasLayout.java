@@ -4,13 +4,15 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class CanvasLayout extends FrameLayout{
+public class CanvasLayout extends FrameLayout implements ViewGroup.OnHierarchyChangeListener {
     private static final String TAG = "CanvasLayout";
+    private TreeView mTreeView;
     public CanvasLayout(@NonNull Context context) {
         super(context);
     }
@@ -45,16 +47,37 @@ public class CanvasLayout extends FrameLayout{
         x -= treeViewOffsetX;
         y -= treeViewOffsetY;
 
+        //考虑缩放
+        x /= getScaleX();
+        y /= getScaleX();
+
         final int childCount = treeView.getChildCount();
         for(int i = 0 ; i <childCount ; i++){
             View view = treeView.getChildAt(i);
+            if(i == 3) {
+                Log.d(TAG, "isNodeUnder: x y " + x + " " + y);
+                Log.d(TAG, "isNodeUnder: n4 t ,l,r,b " + view.getTop() + " " + view.getLeft() +
+                        " " + view.getRight() + " " + view.getBottom());
+            }
             if(x >= view.getLeft()
                     && x < view.getRight()
                     && y >= view.getTop()
                     && y < view.getBottom()){
+                Log.d(TAG, "isNodeUnder: return true");
                 return true;
             }
         }
+        Log.d(TAG, "isNodeUnder: return false");
         return false;
+    }
+
+    @Override
+    public void onChildViewAdded(View parent, View child) {
+        mTreeView = (TreeView)child;
+    }
+
+    @Override
+    public void onChildViewRemoved(View parent, View child) {
+
     }
 }

@@ -24,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
     private Button addsubBtn;
     private Button deleteBtn;
     private Button saveBtn;
+    private Button changeAutoLayoutBtn;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         addsubBtn = findViewById(R.id.addSubNode);
         deleteBtn = findViewById(R.id.deleteNode);
         saveBtn = findViewById(R.id.saveNode);
+        changeAutoLayoutBtn = findViewById(R.id.changeLayoutMode);
 
         //点击添加子节点
         addsubBtn.setOnClickListener(new View.OnClickListener() {
@@ -83,6 +86,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mTreeView.saveFile("temp1.ch");
+            }
+        });
+
+        changeAutoLayoutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean flag = mTreeView.isInAutoLayoutMode();
+                mTreeView.setInAutoLayoutMode(!flag);
             }
         });
 

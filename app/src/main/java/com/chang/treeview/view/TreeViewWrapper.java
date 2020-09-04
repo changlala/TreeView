@@ -94,6 +94,19 @@ public class TreeViewWrapper extends FrameLayout implements ViewGroup.OnHierarch
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         boolean flag = mDragHelper.shouldInterceptTouchEvent(ev);
         Log.d(TAG, "onInterceptTouchEvent: "+ev.getAction()+" "+flag);
+
+        // TODO: 2020/9/4 多指情况下如果触摸到了node的情形是否需要拦截？
+
+        if(!mTreeView.isInAutoLayoutMode()){
+            //触摸位置在节点上，不拦截
+            if(mCanvasLayout.isNodeUnder((int)ev.getX(),(int)ev.getY()) ){
+                return false;
+            }
+            //如果触摸位置不在节点但是当前节点正处于拖拽状态，也不拦截
+            if(mTreeView.getDragHelper().getViewDragState() == ViewDragHelper.STATE_DRAGGING){
+                return false;
+            }
+        }
         return flag;
     }
 
@@ -108,6 +121,7 @@ public class TreeViewWrapper extends FrameLayout implements ViewGroup.OnHierarch
         Log.d(TAG, "onChildViewAdded: parent child"+parent+" "+child);
         //取得子view实例
         mCanvasLayout = (CanvasLayout)child;
+        mTreeView = (TreeView) mCanvasLayout.getChildAt(0);
     }
 
     @Override

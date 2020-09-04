@@ -46,6 +46,12 @@
             android:layout_width="50dp"
             android:layout_height="wrap_content"
             android:id="@+id/saveNode"/>
+
+        <Button
+            android:text="changeLayoutMode"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/changeLayoutMode"/>
     </LinearLayout>
 
 </RelativeLayout>
