@@ -8,7 +8,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.chang.treeview.R;
 import com.chang.treeview.model.Node;
@@ -29,8 +31,14 @@ public class NodeView extends LinearLayout implements NodeViewContract.View  {
 
     private NodeViewPresenter mPresenter;
 
+    private Context mContext;
+
+    //可拖拽点控件
+//    private PointView mPointView;
+
     public NodeView(Context context) {
         super(context);
+        mContext = context;
         //开启后才会走onDraw
         setWillNotDraw(false);
         setOrientation(HORIZONTAL);
@@ -86,6 +94,22 @@ public class NodeView extends LinearLayout implements NodeViewContract.View  {
 
         return res;
     }
+
+//    private void initPointView(){
+//        //允许子view超出布局绘制
+//        setClipChildren(false);
+//
+//        //配置pointVIew属性
+//        int pointviewSideLength = 20;
+//        mPointView = new PointView(mContext);
+//        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(pointviewSideLength,pointviewSideLength);
+//        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);//true
+//        lp.addRule(RelativeLayout.CENTER_VERTICAL);
+//        lp.setMargins(0,0,-pointviewSideLength/2,0);
+//        mPointView.setLayoutParams(lp);
+//
+//
+//    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {

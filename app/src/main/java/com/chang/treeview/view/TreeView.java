@@ -21,14 +21,18 @@ import com.chang.treeview.presenter.TreeViewContract;
 import com.chang.treeview.presenter.TreeViewPresenter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import androidx.annotation.NonNull;
 import androidx.customview.widget.ViewDragHelper;
 
 import static com.chang.treeview.DensityUtils.dp2px;
 
-public class TreeView extends ViewGroup implements TreeViewContract.View {
+public class TreeView extends ViewGroup implements TreeViewContract.View , ViewGroup.OnHierarchyChangeListener {
 
     private static final String TAG = "TreeView";
     private TreeViewContract.Presenter mPresenter;
@@ -56,14 +60,32 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
 
     private boolean inAutoLayoutMode = true;
 
+    //存储所有节点和其对应的PointVIew
+    private ConcurrentHashMap<NodeView,PointView> mPointViewMap = new ConcurrentHashMap<>();
+    //当前是否需要更新pointView 当发生子view add remove时被才需要
+    private boolean needUpdatePointView ;
+    private static int POINTVIEW_WIDTH = 70;
+
+    private ArrayList<NodeView> mNodeViewList = new ArrayList();
+
+    //互动模式下当前拖拽创建的nodeview
+    private NodeView mNVcreatedByPoint;
+
     public boolean isInAutoLayoutMode() {
         return inAutoLayoutMode;
     }
 
     public void setInAutoLayoutMode(boolean inAutoLayoutMode) {
         this.inAutoLayoutMode = inAutoLayoutMode;
-        if(inAutoLayoutMode)
-            requestLayout();
+        if(inAutoLayoutMode){
+            changePointViewVisible(false);
+        }else{
+            if(mPointViewMap.size() != 0)
+                changePointViewVisible(true);
+        }
+
+        requestLayout();
+        invalidate();
     }
 
     public ViewDragHelper getDragHelper() {
@@ -89,12 +111,17 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         mDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
             @Override
             public boolean tryCaptureView(@NonNull View child, int pointerId) {
-                NodeView nv = (NodeView)child;
+                if(child instanceof NodeView){
+                    NodeView nv = (NodeView)child;
 
-                //头节点不可移动
-                if(nv.getNodeValue().equals(mTree.getHead())){
-                    return false;
+                    //头节点不可移动
+                    if(nv.getNodeValue().equals(mTree.getHead())){
+                        return false;
+                    }
+                }else if(child instanceof PointView){
+
                 }
+
                 return true;
             }
 
@@ -129,27 +156,74 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
 
             @Override
             public void onViewReleased(@NonNull View releasedChild, float xvel, float yvel) {
-                super.onViewReleased(releasedChild, xvel, yvel);
-                Log.d(TAG, "onViewReleased: child t l r b"
-                        +((NodeView)releasedChild).getNodeValue().getName()
-                        +" "+releasedChild.getTop()+
-                        " "+ releasedChild.getLeft()+" "+
-                        releasedChild.getRight()+" "+
-                        releasedChild.getBottom());
+                if(releasedChild instanceof PointView){
+                    //拖拽结束，移除pv
+//                    Iterator<NodeView> it = mPointViewMap.keySet().iterator();
+//                    while (it.hasNext()){
+//                        NodeView nv = it.next();
+//                        if(mPointViewMap.get(nv) == (PointView)releasedChild){
+//                            removeView(releasedChild);
+//                            mPointViewMap.remove(nv);
+//                        }
+//                    }
+                    mNVcreatedByPoint = null;
+                }
+//                Log.d(TAG, "onViewReleased: child t l r b"
+//                        +((NodeView)releasedChild).getNodeValue().getName()
+//                        +" "+releasedChild.getTop()+
+//                        " "+ releasedChild.getLeft()+" "+
+//                        releasedChild.getRight()+" "+
+//                        releasedChild.getBottom());
             }
 
             @Override
             public void onViewCaptured(@NonNull View capturedChild, int activePointerId) {
-                super.onViewCaptured(capturedChild, activePointerId);
-                Log.d(TAG, "onViewCaptured: "+ ((NodeView)capturedChild).getNodeValue().getName());
+                if(capturedChild instanceof PointView){
+                    //拖拽point 创建NodeView
+                    int l ,t;
+                    l = capturedChild.getLeft();
+                    t = capturedChild.getTop();
+                    NodeView nv = findNodeViewByPointView((PointView)capturedChild);
+                    //更新数据
+                    Node n = new Node();
+                    n.setName("add subNode by point");
+                    nv.getNodeValue().getChildren().add(n);
+
+                    //更新view
+                    NodeView newNv = new NodeView(mContext);
+                    newNv.setNodeValue(n);
+                    newNv.addView(generateCustomView(n));
+                    addView(newNv);
+                    mNodeViewList.add(newNv);
+
+                    mNVcreatedByPoint = newNv;
+
+                }
+//                Log.d(TAG, "onViewCaptured: "+ ((NodeView)capturedChild).getNodeValue().getName());
             }
 
             @Override
             public void onViewPositionChanged(@NonNull View changedView, int left, int top, int dx, int dy) {
+                if(changedView instanceof PointView){
+
+                }
                 //dragTo()调用只重绘拖动的子view，现在重绘整个TreeView
                 refreshView();
             }
         });
+
+        //设置view树变动回调
+        setOnHierarchyChangeListener(this);
+
+        //nodeview添加完成后 添加pointview
+        post(new Runnable() {
+            @Override
+            public void run() {
+                clearAndFillPointViewHashMap();
+                changePointViewVisible(false);
+            }
+        });
+
     }
 
 
@@ -231,6 +305,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
                 //生成内容子view并填充
                 nv.addView(generateCustomView(curNode));
                 addView(nv);
+                mNodeViewList.add(nv);
 
                 List<Node> children = curNode.getChildren();
                 nodeList.addAll(children);
@@ -276,9 +351,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
      * @return
      */
     public NodeView getNodeView(Node n){
-        final int size = getChildCount();
-        for (int i = 0; i < size; i++) {
-            NodeView nv = (NodeView)getChildAt(i);
+        for(NodeView nv : mNodeViewList){
             Node node = nv.getNodeValue();
             if(node.getId() == n.getId())
                 return nv;
@@ -294,16 +367,12 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         p.setColor(getResources().getColor(R.color.red,null));
         p.setStrokeWidth(4);
         p.setStyle(Paint.Style.STROKE);
-        final int size = getChildCount();
-        for (int i = 0; i < size; i++) {
+        for(NodeView nv: mNodeViewList){
             try{
-
-                NodeView nv = (NodeView)getChildAt(i);
                 canvas.drawRect(nv.getSubTreeRect(),p);
             }catch (NullPointerException e){
                 e.printStackTrace();
             }
-
         }
     }
     @Override
@@ -331,14 +400,12 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
             }
 
         }else{
+
             //可拖拽模式
-
             int t = Integer.MAX_VALUE,l = Integer.MAX_VALUE,r = Integer.MIN_VALUE,b = Integer.MIN_VALUE;
-            //遍历所有子view，获得所有子view中l，t的最小值，r、b的最大值
-            for (int i = 0; i < size; i++) {
-                View child = getChildAt(i);
-
-                //scale改变前后 child的tlrb值是不会变的，那该怎么办呢？
+            //遍历所有nodeview，获得所有子view中l，t的最小值，r、b的最大值
+            for(NodeView child : mNodeViewList){
+                //scale改变前后 child的tlrb值是不会变的
                 if(child.getTop() < t)
                     t = child.getTop();
                 if(child.getLeft() < l)
@@ -351,7 +418,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
 
             Rect treeR = new Rect(l,t,r,b);
 
-            setMeasuredDimension(treeR.width(),treeR.height());
+            setMeasuredDimension(treeR.width()+POINTVIEW_WIDTH/2,treeR.height());
             mWidth = treeR.width();
             mHeight = treeR.height();
 
@@ -368,6 +435,47 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         if(mLayoutManager!= null && mTree != null && inAutoLayoutMode){
             //默认布局到画布左上角
             mLayoutManager.onLayout(mTree,0,0);
+        }
+
+        //互动模式
+        if(!inAutoLayoutMode){
+
+            //当前pointview正在被拖拽 更新mNVcreatedByPoint位置
+            if(mDragHelper.getCapturedView() instanceof PointView && mDragHelper.getViewDragState() == ViewDragHelper.STATE_DRAGGING){
+                View captureView = mDragHelper.getCapturedView();
+                mNVcreatedByPoint.layout(captureView.getLeft(),captureView.getTop(),
+                        captureView.getLeft()+mNVcreatedByPoint.getMeasuredWidth(),captureView.getTop()+mNVcreatedByPoint.getMeasuredHeight());
+                return;
+            }
+
+            //layout pointview在nodeview右边中点
+            Set nvSet = mPointViewMap.keySet();
+            Iterator it = nvSet.iterator();
+            while (it.hasNext()){
+                NodeView nv = (NodeView) it.next();
+                PointView pv = mPointViewMap.get(nv);
+
+
+                int left,bottom,right,top;
+
+                //pv大小不能比nv大
+//                if(pv.getMeasuredHeight() > nv.getMeasuredHeight() ||
+//                        pv.getMeasuredWidth() > nv.getMeasuredWidth()){
+//                    try {
+//                        throw new Exception();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+                left = nv.getRight() - pv.getMeasuredWidth()/2;
+                right = nv.getRight()+ pv.getMeasuredWidth()/2;
+                top = nv.getTop() +nv.getMeasuredHeight()/2-pv.getMeasuredHeight()/2;
+                bottom = nv.getTop()+nv.getMeasuredHeight()/2 + pv.getMeasuredHeight()/2;
+
+                //layout pointview，在NodeView的有边框中部
+                pv.layout(left,top,right,bottom);
+
+            }
         }
 
     }
@@ -425,14 +533,29 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
      * @return
      */
     private NodeView getNodeViewUnderXY(int x, int y){
-        final int childCount = getChildCount();
-        for(int i = 0 ; i <childCount ; i++){
-            View view = getChildAt(i);
-            if(x >= view.getLeft()
-                    && x < view.getRight()
-                    && y >= view.getTop()
-                    && y < view.getBottom()){
-                return (NodeView)view;
+
+        for(NodeView nv: mNodeViewList){
+            if(x >= nv.getLeft()
+                    && x < nv.getRight()
+                    && y >= nv.getTop()
+                    && y < nv.getBottom()) {
+                return nv;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 搜索pointViewHashMap，查找和pv关联的nodeview
+     * @param pv
+     * @return
+     */
+    private NodeView findNodeViewByPointView(PointView pv){
+        Iterator<NodeView> it = mPointViewMap.keySet().iterator();
+        while (it.hasNext()){
+            NodeView nv = it.next();
+            if(mPointViewMap.get(nv) == pv){
+                return nv;
             }
         }
         return null;
@@ -445,7 +568,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
             drawNodeLine(canvas);
 
         //test
-        drawSubTreeRect(canvas);
+//        drawSubTreeRect(canvas);
 
 
         Log.d(TAG, "dispatchDraw: ");
@@ -545,6 +668,101 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
     }
 
 
+    /**
+     * 更新mPointViewHashMap
+     *
+     * NodeView添加完成后调用
+     */
+    private void clearAndFillPointViewHashMap(){
+
+        //找到所有叶节点 存入数组
+        List<NodeView> nodeViewList = new ArrayList<>();
+        for(NodeView nv : mNodeViewList){
+//            if(nv.getNodeValue().getChildren().size() == 0)
+//                nodeViewList.add(nv);
+            nodeViewList.add(nv);
+        }
+
+        removeAllPointView();
+        mPointViewMap.clear();
+
+        //更新hashmap
+        for(NodeView nv : nodeViewList){
+            PointView pv = new PointView(mContext);
+            //设置宽高
+            LayoutParams lp = new LayoutParams(POINTVIEW_WIDTH,POINTVIEW_WIDTH);
+            pv.setLayoutParams(lp);
+            pv.bringToFront();
+            addView(pv);
+            mPointViewMap.put(nv,pv);
+        }
+    }
+    //移除mPointViewHashMap中保存的所有PointView
+    private void removeAllPointView(){
+        Set<NodeView> pvSet = mPointViewMap.keySet();
+        Iterator<NodeView> it = pvSet.iterator();
+        while (it.hasNext()){
+            NodeView nv = it.next();
+            PointView pv = mPointViewMap.get(nv);
+            removeView(pv);
+        }
+    }
+
+    private void changePointViewVisible(boolean isVisible){
+        Set<NodeView> pvSet = mPointViewMap.keySet();
+        Iterator<NodeView> it = pvSet.iterator();
+        while (it.hasNext()){
+            NodeView nv = it.next();
+            PointView pv = mPointViewMap.get(nv);
+            if (isVisible) {
+                pv.setVisibility(View.VISIBLE);
+            } else {
+                pv.setVisibility(INVISIBLE);
+            }
+
+        }
+    }
+
+    /**
+     * OnHirrachyChangeListener 接口覆写方法
+     *
+     * 当有子view添加时
+     */
+
+    @Override
+    public void onChildViewAdded(View parent, View child) {
+        if(child instanceof NodeView){
+            NodeView nv = (NodeView)child;
+            if(nv.getNodeValue().getChildren().size() == 0){
+                //当前child是叶节点
+                PointView pv = new PointView(mContext);
+                //设置宽高
+                LayoutParams lp = new LayoutParams(POINTVIEW_WIDTH,POINTVIEW_WIDTH);
+                pv.setLayoutParams(lp);
+                pv.bringToFront();
+                if(isInAutoLayoutMode()){
+                    pv.setVisibility(INVISIBLE);
+                }else{
+                    pv.setVisibility(VISIBLE);
+                }
+                addView(pv);
+                mPointViewMap.put(nv,pv);
+            }
+        }
+//            needUpdatePointView = true;
+    }
+
+    @Override
+    public void onChildViewRemoved(View parent, View child) {
+        if(child instanceof NodeView){
+            NodeView nv = (NodeView)child;
+            if(mPointViewMap.containsKey(nv)){
+                PointView pv = mPointViewMap.get(nv);
+                removeView(pv);
+                mPointViewMap.remove(nv);
+            }
+        }
+    }
 
     /**
      * 清除mCurClickNodeView的点击状态
@@ -579,7 +797,9 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         nv.setNodeValue(newNode);
         nv.addView(generateCustomView(newNode));
 
+
         addView(nv);
+        mNodeViewList.add(nv);
 
         refreshView();
 
@@ -594,6 +814,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
         for(Node n : deleteNodeList){
             NodeView nv = getNodeView(n);
             removeView(nv);
+            mNodeViewList.remove(nv);
             nv = null;
         }
         mCurClickNodeView = null;
@@ -609,7 +830,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View {
      * @param newNode
      */
     public void addSubNode(Node newNode){
-        if(mCurClickNodeView != null)
+        if(mCurClickNodeView != null && inAutoLayoutMode)
             mPresenter.addSubNode(mCurClickNodeView.getNodeValue(),newNode);
     }
 

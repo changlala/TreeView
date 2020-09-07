@@ -31,6 +31,7 @@ public class CanvasLayout extends FrameLayout implements ViewGroup.OnHierarchyCh
      *
      * 判断wrapperlayout坐标系下的x，y是否存在Node
      *
+     * 需要考虑缩放
      * @param x parent(treewrapper)坐标系下
      * @param y
      * @return
@@ -47,7 +48,7 @@ public class CanvasLayout extends FrameLayout implements ViewGroup.OnHierarchyCh
         x -= treeViewOffsetX;
         y -= treeViewOffsetY;
 
-        //考虑缩放
+        //考虑缩放 由于实际上子view的ltrb并没有变 所以需要换算一下触摸点的坐标
         x /= getScaleX();
         y /= getScaleX();
 

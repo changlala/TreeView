@@ -7,6 +7,7 @@
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/chang/treeview/presenter/NodeViewContract.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/chang/treeview/presenter/NodeViewPresenter.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/chang/treeview/view/CanvasLayout.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/chang/treeview/view/PointView.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/chang/treeview/view/TreeViewWrapper.java" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
