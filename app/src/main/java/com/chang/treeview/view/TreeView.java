@@ -58,17 +58,15 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
     private int curTop = 0;
     private int curleft = 0;
 
-    /**
-     * true 自动layout模式，使用layoutManager进行layout，结点不可拖动，添加删除子view需要通过按钮。
-     *
-     * false 互动模式，NodeVIew可拖拽，每个nodeview右边都会显示一个按钮用于拖拽创建子节点。
-     */
-    private boolean inAutoLayoutMode = true;
+        /**
+         * true 自动layout模式，使用layoutManager进行layout，结点不可拖动，添加删除子view需要通过按钮。
+         *
+         * false 互动模式，NodeVIew可拖拽，每个nodeview右边都会显示一个按钮用于拖拽创建子节点。
+         */
+        private boolean inAutoLayoutMode = true;
 
     //存储所有节点和其对应的PointVIew
     private ConcurrentHashMap<NodeView,PointView> mPointViewMap = new ConcurrentHashMap<>();
-    //当前是否需要更新pointView 当发生子view add remove时被才需要
-    private boolean needUpdatePointView ;
     private static int POINTVIEW_WIDTH = 70;
 
     private ArrayList<NodeView> mNodeViewList = new ArrayList();
@@ -113,7 +111,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
         ConfigFile.setFilePath(filePath);
 
         //draghelper
-        mDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
+        mDragHelper = ViewDragHelper.create(this,new ViewDragHelper.Callback() {
             @Override
             public boolean tryCaptureView(@NonNull View child, int pointerId) {
                 if(child instanceof NodeView){

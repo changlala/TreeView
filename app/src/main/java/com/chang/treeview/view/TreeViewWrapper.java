@@ -102,7 +102,11 @@ public class TreeViewWrapper extends FrameLayout implements ViewGroup.OnHierarch
 
             if(ev.getPointerCount() <= 1){
                 //单指
-                if(mCanvasLayout.isNodeUnder((int)ev.getX(),(int)ev.getY())){
+
+                //第二个判断保证在MOVE幅度较大，触点可能在一些时刻脱离Nodeview 此时wrapper不应该拦截执行画布滑动
+                //如果不加第二个判断，会出现滑动子view时MOVE滑动幅度较大时触点脱离NodeView isNodeUnder为false被拦截下来的情况
+                if(mCanvasLayout.isNodeUnder((int)ev.getX(),(int)ev.getY())
+                    ||mTreeView.getDragHelper().getViewDragState() == ViewDragHelper.STATE_DRAGGING){
                     return false;
                 }
             }else if(ev.getPointerCount() == 2){
