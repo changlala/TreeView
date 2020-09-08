@@ -134,9 +134,12 @@ public class NodeView extends LinearLayout implements NodeViewContract.View  {
     public void onDrawForeground(Canvas canvas) {
         super.onDrawForeground(canvas);
         //点击焦点
-        if(isClick )
+        if(isClick ){
+
+            Log.d(TAG, "onDrawForeground: 绘制焦点框");
             //绘制焦点框
             drawClickRect(canvas);
+        }
     }
 
     private Paint clickRectPaint;
@@ -154,14 +157,17 @@ public class NodeView extends LinearLayout implements NodeViewContract.View  {
      * @param canvas
      */
     private void drawClickRect(Canvas canvas){
-        if(subTreeRect != null){
-            Log.d(TAG, "drawClickRect: ");
-            //框绘制在NodeVIew内部
-            int padding = (int)clickRectPaint.getStrokeWidth()/2;
+//        if(subTreeRect != null){
+
+            //        }
+        Log.d(TAG, "drawClickRect: ");
+        //框绘制在NodeVIew内部
+        int padding = (int)clickRectPaint.getStrokeWidth()/2;
 //            int padding = 0;
-            Log.d(TAG, "drawClickRect: padding"+padding);
-            canvas.drawRect(padding,padding,getMeasuredWidth() - padding,getMeasuredHeight() - padding,clickRectPaint);
-        }
+        Log.d(TAG, "drawClickRect: padding"+padding);
+        canvas.drawRect(padding,padding,getMeasuredWidth() - padding,
+                getMeasuredHeight() - padding,clickRectPaint);
+
     }
 
 

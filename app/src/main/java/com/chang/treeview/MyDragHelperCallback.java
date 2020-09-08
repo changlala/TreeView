@@ -128,4 +128,9 @@ public class MyDragHelperCallback extends ViewDragHelper.Callback {
     public boolean tryCaptureView(@NonNull View child, int pointerId) {
         return true;
     }
+
+    @Override
+    public void onViewDragStateChanged(int state) {
+        Log.d(TAG, "onViewDragStateChanged: "+state);
+    }
 }

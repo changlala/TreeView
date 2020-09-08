@@ -58,6 +58,11 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
     private int curTop = 0;
     private int curleft = 0;
 
+    /**
+     * true 自动layout模式，使用layoutManager进行layout，结点不可拖动，添加删除子view需要通过按钮。
+     *
+     * false 互动模式，NodeVIew可拖拽，每个nodeview右边都会显示一个按钮用于拖拽创建子节点。
+     */
     private boolean inAutoLayoutMode = true;
 
     //存储所有节点和其对应的PointVIew
@@ -166,6 +171,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
 //                            mPointViewMap.remove(nv);
 //                        }
 //                    }
+                    requestLayout();
                     mNVcreatedByPoint = null;
                 }
 //                Log.d(TAG, "onViewReleased: child t l r b"
@@ -207,7 +213,9 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
                 if(changedView instanceof PointView){
 
                 }
-                //dragTo()调用只重绘拖动的子view，现在重绘整个TreeView
+                /**
+                 * 核心 每次drag结束后 都会调用重新measure layout刷新界面
+                 */
                 refreshView();
             }
         });
@@ -442,6 +450,7 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
 
             //当前pointview正在被拖拽 更新mNVcreatedByPoint位置
             if(mDragHelper.getCapturedView() instanceof PointView && mDragHelper.getViewDragState() == ViewDragHelper.STATE_DRAGGING){
+                //更新mNVcreatedByPoint位置
                 View captureView = mDragHelper.getCapturedView();
                 mNVcreatedByPoint.layout(captureView.getLeft(),captureView.getTop(),
                         captureView.getLeft()+mNVcreatedByPoint.getMeasuredWidth(),captureView.getTop()+mNVcreatedByPoint.getMeasuredHeight());

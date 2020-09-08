@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 boolean flag = mTreeView.isInAutoLayoutMode();
                 mTreeView.setInAutoLayoutMode(!flag);
-                mTreeView.requestLayout();
             }
         });
 

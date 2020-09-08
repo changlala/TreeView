@@ -48,6 +48,7 @@ public class CanvasLayout extends FrameLayout implements ViewGroup.OnHierarchyCh
         x -= treeViewOffsetX;
         y -= treeViewOffsetY;
 
+        Log.d(TAG, "isNodeUnder: before scale x y "+x+" "+y);
         //考虑缩放 由于实际上子view的ltrb并没有变 所以需要换算一下触摸点的坐标
         x /= getScaleX();
         y /= getScaleX();
@@ -56,7 +57,7 @@ public class CanvasLayout extends FrameLayout implements ViewGroup.OnHierarchyCh
         for(int i = 0 ; i <childCount ; i++){
             View view = treeView.getChildAt(i);
             if(i == 3) {
-                Log.d(TAG, "isNodeUnder: x y " + x + " " + y);
+                Log.d(TAG, "isNodeUnder:afterscale x y scale" + x + " " + y+" "+getScaleX());
                 Log.d(TAG, "isNodeUnder: n4 t ,l,r,b " + view.getTop() + " " + view.getLeft() +
                         " " + view.getRight() + " " + view.getBottom());
             }
