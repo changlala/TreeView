@@ -103,15 +103,15 @@ public class TreeViewWrapper extends FrameLayout implements ViewGroup.OnHierarch
             if(ev.getPointerCount() <= 1){
                 //单指
 
-                //第二个判断保证在MOVE幅度较大，触点可能在一些时刻脱离Nodeview 此时wrapper不应该拦截执行画布滑动
-                //如果不加第二个判断，会出现滑动子view时MOVE滑动幅度较大时触点脱离NodeView isNodeUnder为false被拦截下来的情况
+                //第二个判断保证在互动模式下拖动NodeVIew MOVE幅度较大，触点可能在一些时刻脱离Nodeview
+                // isNodeUnder为false wrapper拦截的情况
                 if(mCanvasLayout.isNodeUnder((int)ev.getX(),(int)ev.getY())
                     ||mTreeView.getDragHelper().getViewDragState() == ViewDragHelper.STATE_DRAGGING){
                     return false;
                 }
             }else if(ev.getPointerCount() == 2){
-                //多点触摸的情况
-                //对第一种情况的处理
+                //多点触摸的情况 对第一种情况的处理
+
                 //取第二指的坐标
                 float x = ev.getX(ev.getActionIndex());
                 float y = ev.getY(ev.getActionIndex());
@@ -120,22 +120,6 @@ public class TreeViewWrapper extends FrameLayout implements ViewGroup.OnHierarch
                     return true;
                 }
             }
-            //触摸位置在节点上 并且触摸事件不是第二指的情况下 不拦截
-            //第二个条件用于在多指的情况下，如果第二指触碰到了NodeView会进行拦截。
-            //例如放大手势中的第二指就算点到了NodeVIew，也会被拦截执行缩放而不是继续下发执行拖动
-//            if(mCanvasLayout.isNodeUnder((int)ev.getX(),(int)ev.getY())){
-//                if(ev.getAction() != MotionEvent.ACTION_POINTER_DOWN){
-//                    return false;
-//                }else{
-//                    return true;
-//                }
-//            }
-
-
-            //如果触摸位置不在节点但是当前节点正处于拖拽状态，也不拦截
-//            if(mTreeView.getDragHelper().getViewDragState() == ViewDragHelper.STATE_DRAGGING){
-//                return false;
-//            }
         }
         return flag;
     }

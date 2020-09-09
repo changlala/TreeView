@@ -31,21 +31,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        savedInstanceState.get
-
-
         mTreeView = findViewById(R.id.treeview);
         //初始化TreeView
         generateTree();
         File df = new File(getFilesDir()+"/"+"temp1.ch");
-        if(df.exists())
+        if(df.exists()){
+
             //读取保存的树文件
             mTreeView.setConfigFile("temp1.ch");
-        else
+            mTree = mTreeView.getTree();
+        }else{
+
             mTreeView.setTree(mTree);
+        }
 
 
-        //设置layout方式
+        //设置layoutManager
         RightTreeLayoutManager treeLayoutManager = new RightTreeLayoutManager(mTreeView);
         mTreeView.setmLayoutManager(treeLayoutManager);
         //设置子view的样式
@@ -94,6 +95,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 boolean flag = mTreeView.isInAutoLayoutMode();
                 mTreeView.setInAutoLayoutMode(!flag);
+
+                //互动模式下invisible addSub按钮
+                if(!mTreeView.isInAutoLayoutMode())
+                    addsubBtn.setVisibility(View.INVISIBLE);
+                else
+                    addsubBtn.setVisibility(View.VISIBLE);
             }
         });
 
