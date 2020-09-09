@@ -78,6 +78,12 @@ public class TreeView extends ViewGroup implements TreeViewContract.View , ViewG
         return inAutoLayoutMode;
     }
 
+    /**
+     * 外部调用
+     *
+     * 在互动模式和自动layout模式下进行切换
+     * @param inAutoLayoutMode
+     */
     public void setInAutoLayoutMode(boolean inAutoLayoutMode) {
         this.inAutoLayoutMode = inAutoLayoutMode;
         if(inAutoLayoutMode){
